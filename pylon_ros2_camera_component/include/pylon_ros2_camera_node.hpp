@@ -130,6 +130,13 @@ public:
    */
   const std::string& cameraFrame() const;
 
+  /**
+   * @brief callback method to change parameters during runtime
+   * @return the result containing the success and the reason
+   */
+  rcl_interfaces::msg::SetParametersResult parametersCallback(
+    const std::vector<rclcpp::Parameter> &parameters);
+
 protected:
   
   /**
@@ -1531,6 +1538,8 @@ protected:
 
   // diagnostics
   diagnostic_updater::Updater diagnostics_updater_;
+
+  OnSetParametersCallbackHandle::SharedPtr callback_handle_;
 };
 
 } // namespace pylon_camera

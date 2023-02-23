@@ -29,6 +29,7 @@
 #include <GenApi/GenApi.h>
 
 #include "pylon_ros2_camera_node.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
 
 
 namespace pylon_ros2_camera
@@ -74,6 +75,34 @@ PylonROS2CameraNode::PylonROS2CameraNode(const rclcpp::NodeOptions& options)
   timer_ = this->create_wall_timer(
             std::chrono::duration<double>(1. / this->frameRate()),
             std::bind(&PylonROS2CameraNode::spin, this));
+
+  callback_handle_ = this->add_on_set_parameters_callback(
+  std::bind(&PylonROS2CameraNode::parametersCallback, this, std::placeholders::_1));
+
+}
+
+rcl_interfaces::msg::SetParametersResult PylonROS2CameraNode::parametersCallback(
+    const std::vector<rclcpp::Parameter> &parameters) {
+  rcl_interfaces::msg::SetParametersResult result;
+
+  result.successful = true;
+  result.reason = "success";
+
+  for (const auto &param: parameters) {
+    if (param.get_name() == "exposure") {
+      float reached_exposure;
+      result.successful = this->setExposure(param.as_int(), reached_exposure);
+      RCLCPP_INFO_STREAM(LOGGER, "Setting exposure to "
+              << param.as_int() << ", reached: "
+              << reached_exposure);
+
+      if(!result.successful){
+        result.reason = "see log file for the reason";
+      }
+    }
+  }
+
+  return result;
 }
 
 PylonROS2CameraNode::~PylonROS2CameraNode()
